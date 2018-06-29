@@ -54,7 +54,6 @@ class ClientThread implements Runnable{
 	private Socket client;
 	private BufferedReader bf = null;
 	private Map<String,Socket> map;
-	private ObjectOutputStream oos;
 	
 	public ClientThread(Socket client,Map<String,Socket> map){
 		this.client = client;
@@ -66,15 +65,14 @@ class ClientThread implements Runnable{
 		// TODO Auto-generated method stub
 
 		String str = null;
-		while(client!=null){
+		while(!client.isClosed()){
 			try {
 				bf = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-/*				oos = new ObjectOutputStream(client.getOutputStream());
-				oos.writeObject(map.keySet().toArray());
-				oos.flush();*/
 				
-				while((str=bf.readLine())!=null)
+
+				new Thread(new Online(client)).start();
+				
+				while((str=bf.readLine())!=null && client != null)
 					server.content.setText(server.content.getText()+"\n"+client.getInetAddress()+":"+client.getPort()+"¡ª¡ª:"+str);
 				server.list.removeElement(""+client.getPort());
 				server.jList.setListData(server.list);
@@ -85,7 +83,40 @@ class ClientThread implements Runnable{
 				e.printStackTrace();
 			}
 		}
+
 	}
-	
+	class Online implements Runnable{
+		private ObjectOutputStream oos;
+		private Socket client;
+		public Online(Socket client){
+			this.client = client;
+		}
+		/** (non-Javadoc)
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			try {
+				while(!client.isClosed()){
+					
+					oos = new ObjectOutputStream(client.getOutputStream());
+					oos.writeObject(map.keySet().toArray());
+					oos.flush();
+					Thread.sleep(1000);
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+		
+		
+	}
 	
 }

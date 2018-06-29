@@ -23,7 +23,7 @@ public class client extends JFrame{
 	private JPanel panelCenter;
 	private JScrollPane panelr;
 	private JScrollPane panell;
-	private JList<String> jList;
+	private JList<Object> jList;
 	private JPanel panelDown;
 	private int port;
 	private String addr;
@@ -59,7 +59,7 @@ public class client extends JFrame{
 		panelCenter = new JPanel();
 		panelCenter.setLayout(new GridLayout());
 		
-		jList =  new JList<String>();
+		jList =  new JList<Object>();
 		panell = new JScrollPane(jList);
 		panelr = new JScrollPane(msg);
 		panell.setBorder(BorderFactory.createTitledBorder("在线列表"));
@@ -93,7 +93,7 @@ public class client extends JFrame{
 				addr = taddr.getText();
 				try {
 					socket = new Socket(addr,port);
-					//new Thread(new ListThread(socket,jList)).start();
+					new Thread(new ListThread(socket,jList)).start();
 					JOptionPane.showMessageDialog(null, "连接成功");
 				} catch (UnknownHostException e1) {
 					// TODO Auto-generated catch block
@@ -119,13 +119,16 @@ public class client extends JFrame{
 			}
 			if(e.getSource()==exit){
 				try {
+
+					out.close();socket.getInputStream().close();socket.getOutputStream().close();
 					socket.close();
-					out.close();
+					
+					System.exit(0);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				System.exit(0);
+
 			}
 		}
 		
@@ -140,9 +143,9 @@ class ListThread implements Runnable{
 	
 	private Socket socket;
 	private ObjectInputStream ois;
-	private JList<String> jList;
+	private JList<Object> jList;
 	
-	public ListThread(Socket socket,JList<String> jList){
+	public ListThread(Socket socket,JList<Object> jList){
 		this.socket = socket;
 		this.jList = jList;
 	}
@@ -154,14 +157,17 @@ class ListThread implements Runnable{
 		// TODO Auto-generated method stub
 		
 		try {
-			ois = new ObjectInputStream(socket.getInputStream());
-			String[] o = (String[])ois.readObject();
-			
-			Vector<String> list = new Vector<String>();
-			for(int i=0;i<o.length;i++)
-				list.add(o[i]);
-			jList.setListData(list);
-		} catch (IOException | ClassNotFoundException e) {
+			while(!socket.isClosed()){
+				ois = new ObjectInputStream(socket.getInputStream());
+				Object[] o = (Object[])ois.readObject();
+				
+				Vector<Object> list = new Vector<Object>();
+				for(int i=0;i<o.length;i++)
+					list.add(o[i]);
+				jList.setListData(list);
+				Thread.sleep(1000);
+			}
+		} catch (IOException | ClassNotFoundException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
