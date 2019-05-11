@@ -15,7 +15,6 @@ public class Test {
 		}catch(ClassNotFoundException e){
 			e.printStackTrace();
 		}*/
-		
 		String str = "12345678";
 		str = str.replaceAll("0", "-2-");
 		System.out.println(str);
